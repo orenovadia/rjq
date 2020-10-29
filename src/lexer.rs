@@ -4,13 +4,15 @@ use crate::lexer::Type::Identifier;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
+#[derive(Clone)]
 pub struct Token {
-    token_type: Type,
-    text: String,
+    pub token_type: Type,
+    pub text: String,
 }
 
 #[derive(Debug)]
 #[derive(PartialEq)]
+#[derive(Clone)]
 pub enum Type {
     Dot,
     Identifier,
@@ -31,7 +33,6 @@ impl Lexer {
     }
 
     pub fn next_token(&mut self) -> Option<Token> {
-        let tot = self.total;
         if self.pos == self.total {
             None
         } else { self.remaining() }
@@ -40,7 +41,6 @@ impl Lexer {
     fn remaining(&mut self) -> Option<Token> {
         while self.has_remaining() {
             let next = self.advance();
-            println!("{}", next);
 
             return match next {
                 '.' => Some(Token { token_type: Type::Dot, text: ".".to_string() }),
@@ -64,15 +64,15 @@ impl Lexer {
                 Some(c) => {
                     if c.is_alphanumeric() {
                         builder.append(c);
+                        self.advance();
                     } else { done = true; }
                 }
             }
-            self.advance();
         }
         return builder.string().unwrap();
     }
 
-    fn has_remaining(&self) -> bool {
+    pub(crate) fn has_remaining(&self) -> bool {
         self.pos < self.total
     }
 
@@ -120,6 +120,16 @@ mod tests {
         assert_tokenized_many(".bar", vec![dot, ident]);
     }
 
+    #[test]
+    fn test_dot_identifier_many() {
+        let dot = Token { token_type: Dot, text: ".".to_string() };
+        let ident_ab = Token { token_type: Identifier, text: "ab".to_string() };
+        let ident_cd = Token { token_type: Identifier, text: "cd".to_string() };
+        let expected = vec![dot.clone(), ident_ab, dot, ident_cd];
+
+        assert_tokenized_many(".ab.cd", expected);
+    }
+
     fn assert_no_token(text: &str) {
         let actual = first_token(text.to_string());
         assert_eq!(actual, None)
@@ -132,10 +142,11 @@ mod tests {
 
     fn assert_tokenized_many(text: &str, tokens: Vec<Token>) {
         let mut lex = Lexer::on(text.to_string());
-        for t in tokens {
-            assert_eq!(lex.next_token(), Some(t))
+        let mut actual = vec![];
+        while lex.has_remaining() {
+            actual.push(lex.next_token().expect("must be a token"));
         }
-        assert!(lex.next_token().is_none())
+        assert_eq!(actual, tokens);
     }
 
     fn first_token(text: String) -> Option<Token> {
