@@ -28,7 +28,7 @@ impl Apply for Expression {
 
 
 mod tests {
-    use serde_json::{from_str, json, Value};
+    use serde_json::{Value, json};
 
     use crate::parser::{Expression, Parser};
     use crate::runner::{Apply, transform};
