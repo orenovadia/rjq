@@ -1,8 +1,7 @@
 use std::{env, io};
 use std::io::Read;
-use std::process::exit;
 
-use serde_json::{json, Value};
+use serde_json::Value;
 
 use crate::parser::{Expression, Parser};
 use crate::runner::transform;
@@ -20,7 +19,6 @@ fn main() {
     println!("expression: {:#?}", &expr);
 
     let json_input = read_stdin();
-    println!("input: {:#?}", json_input);
 
     let transformed = transform(json_input, expr);
     println!("result: {}", transformed);

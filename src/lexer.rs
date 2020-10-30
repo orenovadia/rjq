@@ -72,7 +72,7 @@ impl Lexer {
         return builder.string().unwrap();
     }
 
-    pub(crate) fn has_remaining(&self) -> bool {
+    pub fn has_remaining(&self) -> bool {
         self.pos < self.total
     }
 
@@ -84,7 +84,7 @@ impl Lexer {
     }
 
     fn peek(&self) -> Option<char> {
-        self.chars.get(self.pos).map(|c| c.clone())
+        self.chars.get(self.pos).map(char::clone)
     }
 }
 
