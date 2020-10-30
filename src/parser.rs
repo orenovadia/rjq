@@ -4,6 +4,7 @@ use crate::lexer::{Lexer, Token, Type};
 #[derive(PartialEq)]
 pub enum Expression {
     Attribute { expression: Box<Expression>, name: String },
+    Pipe { left: Box<Expression>, right: Box<Expression> },
     This,
 }
 
@@ -21,6 +22,10 @@ impl Parser {
     }
 
     fn parse_expression(mut self) -> Expression {
+        self.parse_attribute()
+    }
+
+    fn parse_attribute(mut self) -> Expression {
         let mut current = Expression::This;
 
         while self.lexer.has_remaining() {
@@ -58,13 +63,13 @@ mod tests {
 
     #[test]
     fn parses_object() {
-        assert_parsed(".", Expression::This)
+        assert_parsed(".", &Expression::This)
     }
 
     #[test]
     fn parses_attribute() {
         let expected = Expression::Attribute { expression: Box::from(Expression::This), name: "bar".to_string() };
-        assert_parsed(".bar", expected)
+        assert_parsed(".bar", &expected)
     }
 
     #[test]
@@ -72,11 +77,22 @@ mod tests {
         let bar = Expression::Attribute { expression: Box::from(Expression::This), name: "bar".to_string() };
         let fiz = Expression::Attribute { expression: Box::from(bar), name: "fiz".to_string() };
 
-        assert_parsed(".bar.fiz", fiz)
+        assert_parsed(".bar.fiz", &fiz)
     }
 
-    fn assert_parsed(command: &str, expected: Expression) {
+    #[test]
+    fn parse_pipe() {
+        // TODO:
+        let expected = Expression::Pipe {
+            left: Box::from(Expression::This),
+            right: Box::from(Expression::This),
+        };
+        assert_parsed(". | .", &expected);
+        assert_parsed(".|.", &expected);
+    }
+
+    fn assert_parsed(command: &str, expected: &Expression) {
         let actual = Parser::parse(command.to_string());
-        assert_eq!(expected, actual);
+        assert_eq!(actual, *expected);
     }
 }

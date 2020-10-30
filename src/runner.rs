@@ -21,6 +21,7 @@ impl Apply for Expression {
                     _ => Value::Null
                 }
             }
+            Expression::Pipe { left: _, right: _ } => { unreachable!() }
             Expression::This => { value }
         }
     }
