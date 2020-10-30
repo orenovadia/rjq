@@ -4,6 +4,7 @@ use crate::parser::Parser;
 
 mod parser;
 mod lexer;
+mod runner;
 
 fn main() {
     let expr = Parser::parse(".foo.bar".to_string());
