@@ -21,7 +21,9 @@ impl Apply for Expression {
                     _ => Value::Null
                 }
             }
-            Expression::Pipe { left: _, right: _ } => { unreachable!() }
+            Expression::Pipe { left: first, right: second } => {
+                second.transform(first.transform(value))
+            }
             Expression::This => { value }
         }
     }
@@ -60,6 +62,21 @@ mod tests {
     fn test_nested_attribute() {
         let value: Value = json!({"a": {"b":"foo"} });
         let expression = Parser::parse(".a.b".to_string());
+        assert_transformed_to(value.clone(), expression, json!("foo"));
+    }
+    #[test]
+    fn test_chained_pipes() {
+        let value: Value = json!({"a": {"b":"foo"} });
+
+        let expression = Parser::parse(".|.".to_string());
+        assert_transformed_to(value.clone(), expression, value.clone());
+
+        let expression = Parser::parse(".|.|.|.a|.".to_string());
+        assert_transformed_to(value.clone(), expression, json!({"b":"foo"}));
+
+        let expression = Parser::parse(".a|.b".to_string());
+        assert_transformed_to(value.clone(), expression, json!("foo"));
+        let expression = Parser::parse(".|.|.|.a|.|.b".to_string());
         assert_transformed_to(value.clone(), expression, json!("foo"));
     }
 
