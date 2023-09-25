@@ -1,4 +1,6 @@
 use crate::lexer::{Lexer, Token, Type};
+use crate::lexer::Type::Identifier;
+use crate::parser::Expression::Pipe;
 
 #[derive(Debug)]
 #[derive(PartialEq)]
@@ -25,20 +27,27 @@ impl Parser {
         self.parse_attribute()
     }
 
-    fn parse_attribute(mut self) -> Expression {
+    fn parse_attribute(&mut self) -> Expression {
         let mut current = Expression::This;
+        let mut previous_type = Type::Dot;
 
         while self.lexer.has_remaining() {
-            self.require(Type::Dot);
-
-            match self.maybe(Type::Identifier) {
+            match self.lexer.next_token() {
+                None => {}
+                Some(Token{token_type: Type::Dot, text: _}) => {
+                    previous_type = Type::Dot;
+                }
                 Some(Token { token_type: Type::Identifier, text: name }) => {
+                    assert_eq!(previous_type, Type::Dot);
+                    previous_type = Type::Identifier;
                     let expression = Box::from(current);
                     current = Expression::Attribute { expression, name }
                 }
-                None => break,
-                unexpected => panic!("unexpected '{:?}' token", unexpected)
-            };
+                Some(Token { token_type: Type::Pipe, text: _ }) => {
+                    current = Pipe { left: Box::new(current), right: Box::new(self.parse_attribute()) }
+                }
+                _ => panic!("unexpected '{:?}' token", current)
+            }
         }
         return current;
     }
@@ -79,6 +88,15 @@ mod tests {
 
         assert_parsed(".bar.fiz", &fiz)
     }
+    #[ignore]
+    #[test]
+    fn just_identifier_is_syntax_error() {
+        assert_error("foo")
+    }
+
+    fn assert_error(expression: &str) {
+        Parser::parse(String::from(expression));
+    }
 
     #[test]
     fn parse_pipe() {
@@ -93,6 +111,7 @@ mod tests {
 
     fn assert_parsed(command: &str, expected: &Expression) {
         let actual = Parser::parse(command.to_string());
+        println!("{:?}", actual);
         assert_eq!(actual, *expected);
     }
 }

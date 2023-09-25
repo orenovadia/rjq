@@ -16,6 +16,7 @@ pub struct Token {
 pub enum Type {
     Dot,
     Identifier,
+    Pipe,
 }
 
 #[derive(Debug)]
@@ -45,6 +46,7 @@ impl Lexer {
             return match next {
                 '.' => Some(Token { token_type: Type::Dot, text: ".".to_string() }),
                 'a'..='z' | 'A'..='Z' => Some(Token { token_type: Identifier, text: self.consume_alnum(next) }),
+                '|' => Some(Token{token_type: Type::Pipe, text: "|".to_string()}),
                 _ => None
             };
         }
