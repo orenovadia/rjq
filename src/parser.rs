@@ -1,5 +1,4 @@
 use crate::lexer::{Lexer, Token, Type};
-use crate::lexer::Type::Identifier;
 use crate::parser::Expression::Pipe;
 
 #[derive(Debug)]
@@ -46,22 +45,9 @@ impl Parser {
                 Some(Token { token_type: Type::Pipe, text: _ }) => {
                     current = Pipe { left: Box::new(current), right: Box::new(self.parse_attribute()) }
                 }
-                _ => panic!("unexpected '{:?}' token", current)
             }
         }
         return current;
-    }
-
-    fn require(&mut self, expected_type: Type) -> Token {
-        let token = self.lexer.next_token().expect("expected token");
-        assert_eq!(token.token_type, expected_type);
-        token
-    }
-
-    fn maybe(&mut self, expected_type: Type) -> Option<Token> {
-        let token = self.lexer.next_token()?;
-        assert_eq!(token.token_type, expected_type);
-        Some(token)
     }
 }
 
